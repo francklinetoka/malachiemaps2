@@ -1,0 +1,14 @@
+:root { --accent: #7A4B2A; }
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #fff; color: #111; }
+a { color: var(--accent); text-decoration: none; }
+.header { display:flex; align-items:center; justify-content:space-between; padding:16px; border-bottom:1px solid #eee; }
+.header .brand { display:flex; gap:12px; align-items:center; }
+.container { padding: 20px; max-width:1200px; margin: 0 auto; }
+.card { background:#fff; padding:16px; border-radius:8px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+.button { background:var(--accent); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+.input, textarea, select { width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; }
+.grid { display:grid; gap:12px; }
+.grid.cols-2 { grid-template-columns: 1fr 700px; align-items:start; }
+.footer { padding:20px; background:#fafafa; border-top:1px solid #eee; margin-top:24px; text-align:center; font-size:14px; }
+.ticker { background:#f6f6f6; padding:8px; margin-top:8px; }
