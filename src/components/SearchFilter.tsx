@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { fetchCountries, fetchCitiesForCountry } from "../lib/location";
 
 type Props = {
   onSearch: (filters: any) => void;
@@ -12,62 +13,117 @@ export default function SearchFilter({ onSearch }: Props) {
   const [filters, setFilters] = useState<any>({});
 
   useEffect(() => {
-    setCountries(["République du Congo", "France", "USA", "Espagne", "Portugal", "Chine"]);
+    let mounted = true;
+    (async () => {
+      const list = await fetchCountries();
+      if (!mounted) return;
+      setCountries(list);
+    })();
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
-    if (filters.country) {
-      if (filters.country.includes("Congo")) setCities(["Brazzaville", "Pointe-Noire"]);
-      else setCities(["Ville A", "Ville B"]);
-    } else setCities([]);
+    // When country changes, fetch cities for that country
+    setCities([]);
     setProvinces([]);
     setNeighborhoods([]);
+    if (!filters.country) return;
+    (async () => {
+      const list = await fetchCitiesForCountry(filters.country);
+      setCities(list);
+    })();
   }, [filters.country]);
 
   useEffect(() => {
-    if (filters.city) setProvinces(["Province 1", "Province 2"]);
-    else setProvinces([]);
-    setNeighborhoods([]);
+    // Provinces/neighborhoods: we don't have a global API here.
+    // Keep them optional and allow free text or simple static placeholders if needed.
+    if (filters.city) {
+      setProvinces(["(Choisir une province)"]);
+      setNeighborhoods([]);
+    } else {
+      setProvinces([]);
+      setNeighborhoods([]);
+    }
   }, [filters.city]);
 
-  useEffect(() => {
-    if (filters.province) setNeighborhoods(["Quartier 1", "Quartier 2"]);
-    else setNeighborhoods([]);
-  }, [filters.province]);
-
   const handleSearch = () => {
-    if (filters.city && !filters.country) { alert("Veuillez choisir le pays avant la ville"); return; }
-    if (filters.province && (!filters.country || !filters.city)) { alert("Veuillez choisir pays et ville avant la province"); return; }
-    if (filters.neighborhood && (!filters.country || !filters.city || !filters.province)) { alert("Veuillez choisir pays, ville et province avant le quartier"); return; }
+    // Basic validations: city requires country; otherwise province/neighborhood are optional
+    if (filters.city && !filters.country) {
+      alert("Veuillez choisir le pays avant la ville");
+      return;
+    }
     onSearch(filters);
   };
 
   return (
-    <div className="card">
-      <div style={{ marginBottom: 8 }}>
-        <input className="input" placeholder="Recherche par nom" value={filters.name || ""} onChange={e => setFilters({ ...filters, name: e.target.value })} />
+    <div className="search-card">
+      <div className="search-row">
+        <input
+          className="search-input"
+          placeholder="Rechercher par nom d'église, mot-clé..."
+          value={filters.name || ""}
+          onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+        />
+        <button className="btn-primary" onClick={handleSearch}>
+          Rechercher
+        </button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select className="input" value={filters.country || ""} onChange={e => setFilters({ ...filters, country: e.target.value })}>
-          <option value="">Choisir pays</option>
-          {countries.map(c => <option key={c} value={c}>{c}</option>)}
+
+      <div className="filters-grid" style={{ marginTop: 12 }}>
+        <select
+          className="select"
+          value={filters.country || ""}
+          onChange={(e) => setFilters({ ...filters, country: e.target.value, city: "", province: "", neighborhood: "" })}
+        >
+          <option value="">Tous les pays</option>
+          {countries.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
-        <select className="input" value={filters.city || ""} onChange={e => setFilters({ ...filters, city: e.target.value })}>
-          <option value="">Choisir ville</option>
-          {cities.map(c => <option key={c} value={c}>{c}</option>)}
+
+        <select
+          className="select"
+          value={filters.city || ""}
+          onChange={(e) => setFilters({ ...filters, city: e.target.value, province: "", neighborhood: "" })}
+          disabled={!filters.country}
+        >
+          <option value="">Ville</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
-        <select className="input" value={filters.province || ""} onChange={e => setFilters({ ...filters, province: e.target.value })}>
-          <option value="">Choisir province</option>
-          {provinces.map(p => <option key={p} value={p}>{p}</option>)}
+
+        <select
+          className="select"
+          value={filters.province || ""}
+          onChange={(e) => setFilters({ ...filters, province: e.target.value })}
+          disabled={!filters.country}
+        >
+          <option value="">Province (optionnel)</option>
+          {provinces.map((p) => (
+            <option key={p} value={p === "(Choisir une province)" ? "" : p}>
+              {p}
+            </option>
+          ))}
         </select>
-        <select className="input" value={filters.neighborhood || ""} onChange={e => setFilters({ ...filters, neighborhood: e.target.value })}>
-          <option value="">Choisir quartier</option>
-          {neighborhoods.map(n => <option key={n} value={n}>{n}</option>)}
+
+        <select
+          className="select"
+          value={filters.neighborhood || ""}
+          onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
+          disabled={!filters.country}
+        >
+          <option value="">Quartier (optionnel)</option>
+          {neighborhoods.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
         </select>
-      </div>
-      <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <button className="button" onClick={handleSearch}>Rechercher</button>
-        <a href="/admin/register">Signaler une église</a>
       </div>
     </div>
   );

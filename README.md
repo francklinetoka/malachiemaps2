@@ -32,3 +32,28 @@ Structure principale
   - pages: Home, Church detail, Admin (login/register/dashboard/add)
   - components: SearchFilter, Map, Header, Footer
 - public/logo.svg
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Remplace SERVICE_ROLE_KEY par ta service role key (ne pas exposer cette clé publiquement)
+export SERVICE_ROLE_KEY="wnrrvuqkgxbfedulwylb"
+
+curl -sS -X POST "https://wnrrvuqkgxbfedulwylb.supabase.co/auth/v1/admin/users" \
+  -H "Content-Type: application/json" \
+  -H "apikey: ${SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
+  -d '{
+    "email": "sylveretoka@gmail.com",
+    "password": "sylveretoka@gmail.com",
+    "email_confirm": true
+  }'

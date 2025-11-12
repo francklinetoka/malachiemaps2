@@ -22,18 +22,7 @@ export default function Home() {
 
   return (
     <div style={{ background: "#fff", minHeight: "100vh" }}>
-      <header style={{ padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #eee" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <img src="/logo.svg" alt="MalachieMaps" style={{ height: 56 }} />
-          <div>
-            <h1 style={{ margin: 0 }}>MalachieMaps</h1>
-            <small>Retrouve les églises du message</small>
-          </div>
-        </div>
-        <div>
-          <a href="/admin/login">Administration</a>
-        </div>
-      </header>
+     
 
       <div style={{ background: "#f6f6f6", padding: 8 }}>
         <marquee>Message défilant (à gérer depuis SuperAdmin)</marquee>
@@ -61,9 +50,7 @@ export default function Home() {
         </div>
       </div>
 
-      <footer style={{ padding: 20, background: "#fafafa", borderTop: "1px solid #eee" }}>
-        <div>Contact : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, République du Congo</div>
-      </footer>
+      
     </div>
   );
 }

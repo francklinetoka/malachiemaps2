@@ -3,49 +3,55 @@ import Header from "../components/Header";
 import SearchFilter from "../components/SearchFilter";
 import Map from "../components/Map";
 import { supabase } from "../lib/supabaseClient";
+import ChurchCard from "../components/ChurchCard";
+import HelpFloating from "../components/HelpFloating";
 
 export default function Home() {
   const [churches, setChurches] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [recent, setRecent] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAll();
     fetchAnnouncements();
-    // subscribe to changes (simple realtime)
-    const sub = supabase.channel('public-churches')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'churches' }, () => fetchAll())
+    const sub = supabase
+      .channel("public-churches")
+      .on("postgres_changes", { event: "*", schema: "public", table: "churches" }, () => fetchAll())
       .subscribe();
-    return () => { supabase.removeChannel(sub); };
+    return () => supabase.removeChannel(sub);
   }, []);
 
   const fetchAll = async () => {
     const { data, error } = await supabase
-      .from('churches')
-      .select('*')
+      .from("churches")
+      .select("*")
       .eq('is_visible', true)
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .order("created_at", { ascending: false })
+      .limit(500);
     if (error) console.error(error);
     else {
       setChurches(data || []);
       setTotal((data || []).length);
+      const recentList = (data || []).filter((c: any) => {
+        const created = new Date(c.created_at).getTime();
+        return (Date.now() - created) <= (3 * 24 * 3600 * 1000);
+      });
+      setRecent(recentList);
     }
   };
 
   const fetchAnnouncements = async () => {
-    const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(10);
+    const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(50);
     setAnnouncements(data || []);
   };
 
   const handleSearch = async (filters: any) => {
-    let query = supabase.from('churches').select('*').eq('is_visible', true);
-    if (filters.name) query = query.ilike('name', `%${filters.name}%`);
-    if (filters.country) query = query.eq('country', filters.country);
-    if (filters.city) query = query.eq('city', filters.city);
-    if (filters.province) query = query.eq('province', filters.province);
-    if (filters.neighborhood) query = query.eq('neighborhood', filters.neighborhood);
-    const { data, error } = await query.order('created_at', { ascending: false }).limit(200);
+    let query = supabase.from("churches").select("*").eq('is_visible', true);
+    if (filters.name) query = query.ilike("name", `%${filters.name}%`);
+    if (filters.country) query = query.eq("country", filters.country);
+    if (filters.city) query = query.eq("city", filters.city);
+    const { data, error } = await query.order("created_at", { ascending: false }).limit(500);
     if (error) console.error(error);
     else {
       setChurches(data || []);
@@ -54,33 +60,67 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <Header />
-      <div className="ticker"><marquee>{announcements.map(a => a.content).join(' — ') || 'Bienvenue sur MalachieMaps'}</marquee></div>
-      <div className="container grid cols-2" style={{ alignItems: 'start' }}>
-        <div>
-          <SearchFilter onSearch={handleSearch} />
-          <div style={{ marginTop: 12 }}>
-            <strong>{total}</strong> églises ajoutées — <a href="#map">Voir sur la carte</a>
-            <div style={{ marginTop: 12 }}>
-              {churches.map(c => (
-                <div key={c.id} className="card" style={{ marginBottom: 8 }}>
-                  <h3 style={{ margin: 0 }}>{c.name}</h3>
-                  <p style={{ margin: 0 }}>{c.city}, {c.country}</p>
-                  <p style={{ marginTop: 8 }}>{c.address_reference}</p>
-                  <a href={`/church/${c.id}`}>Voir</a>
-                </div>
-              ))}
+    <div className="page-root">
+      
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-left">
+            <h1 className="hero-title">Retrouve les églises du message, partout dans le monde</h1>
+            <p className="hero-sub">Recherche par nom, pays, ville. Signale une église si elle manque.</p>
+            <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+              <div className="stat">
+                <div className="stat-value">{total}</div>
+                <div className="stat-label">Églises répertoriées</div>
+              </div>
+              <div className="stat">
+                <div className="stat-value">{announcements.length}</div>
+                <div className="stat-label">Annonces</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-right">
+            
+            <div className="search-card">
+              <SearchFilter onSearch={handleSearch} />
             </div>
           </div>
         </div>
-        <div id="map">
-          <Map markers={churches.filter(c => c.lat && c.lng)} />
+      </section>
+
+      <main className="content-main">
+        <div className="results">
+          <div className="results-header">
+            <h2>Résultats</h2>
+            <div>{total} trouvées</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 16, marginBottom: 18, alignItems: 'center' }}>
+            <a className="link" href="/annonces">Annonces</a>
+            <div style={{ flexGrow: 1 }} />
+            <div>Récemment ajoutées (3 jours) : <strong>{recent.length}</strong></div>
+          </div>
+
+          <div className="list-grid">
+            {churches.map((c) => <ChurchCard key={c.id} church={c} />)}
+          </div>
         </div>
-      </div>
-      <footer className="footer">
-        Contact : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, République du Congo
-      </footer>
+
+        <aside className="map-aside" id="map">
+          <Map markers={churches.filter((c) => c.lat && c.lng)} />
+        </aside>
+      </main>
+
+      <section className="container" style={{ marginTop: 28 }}>
+        <h3>Églises ajoutées récemment</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 12 }}>
+          {recent.map((r) => <ChurchCard key={r.id} church={r} />)}
+        </div>
+      </section>
+
+   
+
+      <HelpFloating />
     </div>
   );
 }

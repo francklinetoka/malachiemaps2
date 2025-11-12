@@ -1,46 +1,12 @@
-```json
 {
   "siteTitle": "MalachieMaps",
   "welcome": "Retrouve les églises du message",
-  "contact": "Contact : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, République du Congo"
-}
-```
-```markdown name=public/locales/en/common.json
-```json
-{
-  "siteTitle": "MalachieMaps",
-  "welcome": "Find Message churches",
-  "contact": "Contact : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, Republic of Congo"
-}
-```
-```markdown name=public/locales/ln/common.json
-```json
-{
-  "siteTitle": "MalachieMaps",
-  "welcome": "Kita banekazaka ya bandeko",
-  "contact": "Contact : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, République du Congo"
-}
-```
-```markdown name=public/locales/es/common.json
-```json
-{
-  "siteTitle": "MalachieMaps",
-  "welcome": "Encuentra iglesias del mensaje",
-  "contact": "Contacto : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, República del Congo"
-}
-```
-```markdown name=public/locales/pt/common.json
-```json
-{
-  "siteTitle": "MalachieMaps",
-  "welcome": "Encontre igrejas da mensagem",
-  "contact": "Contato : +242069750376 ; malachiemaps@gmail.com ; Brazzaville, República do Congo"
-}
-```
-```markdown name=public/locales/zh/common.json
-```json
-{
-  "siteTitle": "MalachieMaps",
-  "welcome": "查找信息教会",
-  "contact": "联系方式 : +242069750376 ; malachiemaps@gmail.com ; 布拉柴维尔, 刚果共和国"
+  "search_placeholder": "Rechercher par nom d'église, mot-clé...",
+  "report_church": "Signaler une église",
+  "how_it_works": "Comment ça marche",
+  "annonces": "Annonces",
+  "recent": "Récemment ajoutées (3 jours)",
+  "submit": "Envoyer",
+  "contact_whatsapp": "Contacter via WhatsApp",
+  "contact_mail": "Contacter par mail"
 }

@@ -1,35 +1,73 @@
 import React, { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/router";
+import { supabase } from "../../lib/supabaseClient";
+
+/*
+  Page de connexion partagée pour SuperAdmin et Admin de contenu.
+  - Après connexion, récupère le profil et redirige selon le rôle :
+    - SUPERADMIN -> /admin/dashboard/super
+    - CONTENT_ADMIN -> /admin/dashboard/content
+  - Si is_approved = false -> affiche message "Veuillez patienter..."
+*/
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handle = async (e: any) => {
     e.preventDefault();
-    const res = await signIn("credentials", { redirect: false, email, password });
-    if (res && res.ok) {
-      router.push("/admin/dashboard");
-    } else {
-      alert("Identifiants invalides ou compte non approuvé");
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert("Erreur de connexion: " + error.message);
+        setLoading(false);
+        return;
+      }
+
+      // get profile
+      const { data: profileData, error: profileError } = await supabase.from("profiles").select("*").eq("email", email).single();
+      if (profileError || !profileData) {
+        alert("Profil introuvable. Contactez le support.");
+        setLoading(false);
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (!profileData.is_approved) {
+        alert("Veuillez patienter, le support vérifie vos informations.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      // Redirect based on role
+      if (profileData.role === "SUPERADMIN") {
+        window.location.href = "/admin/dashboard/super";
+      } else {
+        window.location.href = "/admin/dashboard/content";
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("Erreur serveur");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 480, margin: "60px auto", padding: 20, background: "#fff", borderRadius: 8 }}>
+    <div style={{ maxWidth: 480, margin: "60px auto", padding: 20 }}>
       <h2>Connexion administrateur</h2>
-      <form onSubmit={handle}>
-        <div><input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /></div>
-        <div style={{ marginTop: 8 }}><input type="password" placeholder="Mot de passe" value={password} onChange={e => setPassword(e.target.value)} /></div>
-        <div style={{ marginTop: 12 }}>
-          <button type="submit" style={{ background: "#7A4B2A", color: "#fff", padding: "8px 12px", border: "none", borderRadius: 6 }}>Se connecter</button>
+      <form onSubmit={handle} style={{ display: "grid", gap: 8 }}>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" />
+        <div>
+          <button className="button" disabled={loading} type="submit">
+            {loading ? "Connexion..." : "Se connecter"}
+          </button>
         </div>
       </form>
-      <div style={{ marginTop: 12 }}>
-        Mot de passe oublié ? Contacter le support.
-      </div>
+      <div style={{ marginTop: 12 }}>Mot de passe oublié ? Contacter le support.</div>
     </div>
   );
 }
